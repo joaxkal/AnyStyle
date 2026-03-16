@@ -6,7 +6,11 @@
   <a href="https://anystyle3dgs.github.io/"><img src="https://img.shields.io/badge/Project_page-AnyStyle-blue" alt="Website"></a>
 </p>
 
-[![Project Teaser](assets/teaser.png)](assets/teaser.png)
+<p align="center">
+  <a href="assets/teaser.png">
+    <img src="assets/teaser.png" alt="Project Teaser" width="500">
+  </a>
+</p>
 
 Please note, that this repo is based on AnySplat. Since we used only subset of original repo functionality there are obsolete .py scripts located in `src` directory. We tried our best to delete any irrelevant files, but due to limited time resources there may still be leftovers. Read this file carefully as it contains tested execution path.
 
