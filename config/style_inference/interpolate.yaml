@@ -1,0 +1,102 @@
+# ------------------------------------------------------------
+# Experiment checkpoint
+# ------------------------------------------------------------
+run_dir: path/to/run
+output_folder: ${run_dir}/style_interpolation
+ckpt: null
+wandb: null
+
+
+# ------------------------------------------------------------
+# Interpolation settings
+# ------------------------------------------------------------
+interpolation:
+  num_steps: 3     # number of interpolation steps (including endpoints)
+  fps: 19          # video framerate
+
+
+# ------------------------------------------------------------
+# Style interpolation pairs
+# ------------------------------------------------------------
+pairs:
+  - name: mosaic
+    style_a:
+      type: text
+      value: "blue and white mosaic tiles arranged in an intricate repeating pattern"
+    style_b:
+      type: text
+      value: "blue and white towering vertical blocks"
+
+  - name: artist_change
+    style_a:
+      type: text
+      value: "red, green and yellow cubist painting, with geometric shapes"
+    style_b:
+      type: text
+      value: "red, green and yellow van gogh style painting"
+
+
+  - name: color_change
+    style_a:
+      type: text
+      value: "cubist art style in blue and brown with fragmented forms, sharp angles, and layered perspectives"
+    style_b:
+      type: text
+      value: "cubist art style in green and pink with fragmented forms, sharp angles, and layered perspectives"
+
+
+  - name: brushwork
+    style_a:
+      type: text
+      value: "surface appearance with smooth blended brushwork and barely visible strokes"
+    style_b:
+      type: text
+      value: "surface appearance with expressive brushwork and clearly visible strokes"
+
+  - name: zebra_to_scream
+    style_a:
+      type: image
+      value: assets/example-zebra_photo.jpg
+    style_b:
+      type: image
+      value: assets/example-scream.jpg
+  
+  - name: woman_to_scream
+    style_a:
+      type: image
+      value: assets/example-woman.jpg
+    style_b:
+      type: image
+      value: assets/example-scream.jpg
+
+  - name: cubism_text_to_woman
+    style_a:
+      type: text
+      value: "abstract cubist composition with fragmented shapes and expressive colors"
+    style_b:
+      type: image
+      value: assets/example-woman.jpg
+
+  - name: neon_to_tiger
+    style_a:
+      type: text
+      value: "glowing tiny lime neon lights illuminating a deep, dark background with high contrast"
+    style_b:
+      type: image
+      value: assets/example-tiger.jpg
+  
+  - name: marble_to_tiger
+    style_a:
+      type: text
+      value: "smooth pink and grey marble surface with natural flowing veins"
+    style_b:
+      type: image
+      value: assets/example-tiger.jpg
+
+# ------------------------------------------------------------
+# Scenes to run interpolation on
+# ------------------------------------------------------------
+scenes:
+  ignatius:
+    path: path/to/scenes_for_inference/ignatius
+    output: ${output_folder}/ignatius

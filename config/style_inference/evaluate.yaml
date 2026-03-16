@@ -1,0 +1,43 @@
+# path to directory with checkpoints
+run_dir: path/to/run
+output_folder: ${run_dir}/inference
+ckpt: null
+wandb: null
+
+styles_for_all_scenes:
+  text: [
+      "glowing neon lights illuminating a deep, dark background with high contrast",
+      "smooth pink and grey marble surface with natural flowing veins",
+      "Black-and-white zebra stripe pattern with high-contrast irregular lines, organic flowing shapes, repeating animal skin texture, monochrome abstract background.",
+      "abstract cubist composition inspired by Picasso, fragmented shapes and expressive colors",
+      "vibrant rainbow spectrum with smooth color transitions and luminous tones",
+      "impressionist painting style with visible brushstrokes, soft edges, and blended colors",
+      "detailed fabric wrinkles with realistic folds, shadows, and texture",
+      "soft white wool texture with fluffy fibers and gentle shadows",
+      "precise geometric grid pattern with evenly spaced lines",
+      "minimal white walls intersected by thin, clean green lines in a modern design",
+      "translucent green crystal with sharp facets and glowing internal reflections",
+      "thick sticky honey dripping slowly with golden color and glossy highlights",
+      "sunlit sandy beach texture with fine grains and subtle natural variation",
+      "cubist art style with fragmented forms, sharp angles, and layered perspectives",
+      "blue and white mosaic tiles arranged in an intricate repeating pattern",
+      ]
+
+  image:
+    - assets/example-zebra_photo.jpg
+    - assets/example-scream.jpg
+    - assets/example-tree.jpg
+    - assets/example-woman.jpg
+    - assets/example-piet_mondrian.jpg
+    - assets/example-tiger.jpg
+    - assets/example-starry_night.jpg
+
+
+# Example config for caterpillar scene from TnT
+scenes:
+  caterpillar:
+    path: path/to/scenes_for_inference/caterpillar
+    output: ${output_folder}/caterpillar
+    style_prompts:  []
+    img_prompts: []
+  

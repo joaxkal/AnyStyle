@@ -1,0 +1,5 @@
+clip_dir:
+    weight: 5.0
+    num_crop_per_img: 0
+    patch_loss_mult: 1.0
+    crop_size: 128

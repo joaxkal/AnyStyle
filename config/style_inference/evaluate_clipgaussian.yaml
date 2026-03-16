@@ -1,0 +1,30 @@
+# path to directory with checkpoints
+run_dir: path/to/run
+output_folder: ${run_dir}/inference_clipgaussian
+ckpt: null 
+wandb: null
+
+styles_for_all_scenes:
+  text: [
+      "Cubism",
+      "Starry Night by Van Gogh",
+      ]
+
+  image: []
+  
+
+
+# Example config for M60 and Truck scenes from TnT
+scenes:
+  m60:
+    path: path/to/stylos_evaluation_data/content/M60
+    output: ${output_folder}/m60
+    style_prompts:  []
+    img_prompts: []
+
+  truck:
+    path: path/to/stylos_evaluation_data/content/Truck
+    output: ${output_folder}/truck
+    style_prompts:  []
+    img_prompts: []
+  

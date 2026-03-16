@@ -1,0 +1,117 @@
+# @package _global_
+
+defaults:
+  - /dataset@_group_.dl3dv: dl3dv
+  - override /model/encoder: anysplat
+  - override /model/encoder/backbone: croco
+  - override /loss: [style, clip_dir, depth_consis] #, [depth_consis] # ablate: opacity loss
+
+wandb:
+  name: dl3dv
+  tags: [dl3dv, 448x448]
+  
+model:
+  encoder:
+    gs_params_head_type: dpt_gs
+    pose_free: true
+    intrinsics_embed_loc: encoder
+    intrinsics_embed_type: token
+    pretrained_weights: ''
+    voxel_size: 0.002
+    pred_pose: true
+    anchor_feat_dim: 128
+    gs_prune: false # ablate: opacity loss
+    pred_head_type: depth
+    freeze_backbone: true # freeze AnySplat model
+    distill: false #  no distillation loss for geometry
+    render_conf: false
+    conf_threshold: 0.1
+    freeze_module: patch_embed
+    voxelize: true
+    intermediate_layer_idx: [4, 11, 17, 23]
+    use_style: True # True - stylization enabled, False - no stylization
+    style_geom_features: "colors-rotations" # avaiable: "none", "no-pos", "colors-rotations"
+    cond_type: "agg_injection_clip" # avaiable: "cross_attention_clip", "cross_attention_dino", "simple_injection_clip","agg_injection_clip"
+    text_adapter_return_identity: false
+
+dataset:
+  dl3dv:
+    input_image_shape: [224, 448]
+    view_sampler:
+
+      num_target_views: 2
+      min_distance_between_context_views: 32
+      max_distance_between_context_views: 256
+
+      min_gap_multiplier: 3
+      max_gap_multiplier: 5
+      max_img_per_gpu: 36
+      num_context_views: 18 # Adjust to prevent OOM, originally 24. NOTE: max_img_per_gpu does not always prevent high img number, see code
+      
+    avg_pose: false
+    intr_augment: true
+    normalize_by_pts3d: false
+    rescale_to_1cube: false
+
+optimizer:
+  lr: 0.0001 #2e-4
+  warm_up_steps: 100
+  backbone_lr_multiplier: 0.05
+
+data_loader:
+  train:
+    batch_size: 1 # not used here
+    max_batch_size: 100000 # you can use it here (for dynamic sampler)
+    num_workers: 2
+    persistent_workers: false
+    pin_memory: false
+  val:
+    num_workers: 1
+    persistent_workers: false
+    pin_memory: false
+  test:
+    num_workers: 1
+    persistent_workers: false
+    pin_memory: false
+    
+trainer:
+  max_steps: 300000
+  val_check_interval: 100
+  num_nodes: 1
+  accumulate_grad_batches: 1
+  precision: bf16-mixed
+
+checkpointing:
+  load: null
+  every_n_train_steps: 200
+  save_weights_only: false
+  save_top_k: 1
+  
+train:
+  text_prompt_ratio: 0.25
+  pose_loss_alpha: 1.0
+  pose_loss_delta: 1.0
+  cxt_depth_weight: 0.0
+  weight_pose: 10.0
+  weight_depth: 1.0
+  weight_normal: 0.0
+  skip_after_step: 3000 # loss skipping: please adjust depending on your loss!
+  loss_threshold: -100.0 # loss skipping: please adjust depending on your loss!
+  # NOTE: If negative value dynamic threshold is used, based on mean+3std of last 500 values
+
+hydra:
+  run:
+    dir: output/exp_${wandb.name}_final_runs/${model.encoder.cond_type}/${now:%Y-%m-%d_%H-%M-%S-%f}
+
+loss:
+  depth_consis: #not used if distill set to false
+    weight: 0.1
+    loss_type: MSE
+  style:
+    style_weight: 1.0
+    content_weight: 0.075
+  clip_dir:
+    weight: 2.0
+    num_crop_per_img: 16
+    patch_loss_mult: 2.0
+    crop_size: 64

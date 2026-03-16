@@ -1,0 +1,132 @@
+[project]
+name = "AnyStyle"
+version = "0.1.0"
+readme = "README.md"
+requires-python = "~=3.10.0"
+dependencies = [
+    "beartype",
+    "clip",
+    "colorama",
+    "colorspacious",
+    "cupy-cuda11x",
+    "dacite",
+    "decorator==4.0.2",
+    "e3nn",
+    "einops",
+    "ftfy",
+    "gradio",
+    "gsplat",
+    "hydra-core",
+    "huggingface_hub",
+    "imageio",
+    "jaxtyping",
+    "lightning",
+    "lpips",
+    "matplotlib",
+    "moviepy==1.0.3",
+    "numpy==1.25.0",
+    "ninja",
+    "opencv-python",
+    "open3d",
+    "plyfile",
+    "Pillow",
+    "pydantic",
+    "pytorch3d==0.7.9",
+    "ruff",
+    "safetensors",
+    "scikit-image",
+    "scikit-video",
+    "svg.py",
+    "tabulate",
+    "timm",
+    "torch==2.2.0",
+    "torchvision==0.17.0",
+    "torch_scatter",
+    "tqdm",
+    "wandb",
+    "wheel",
+    "xformers==0.0.24",
+    "setuptools"
+]
+
+[tool.uv.extra-build-dependencies]
+gsplat = ["ninja", "torch"]
+torch_scatter = ["torch"]
+pytorch3d = ["torch"]
+xformers = ["ninja", "torch", "numpy"]
+
+
+[tool.uv.sources]
+clip = {git = "https://github.com/openai/CLIP", rev = "ded190a052fdf4585bd685cee5bc96e0310d2c93"}
+torch = [
+    {index = "pytorch-cu118"}
+]
+torchvision = [
+    {index = "pytorch-cu118"}
+]
+torch_scatter = [
+    {index = "torch-scatter-cu118"},
+]
+gsplat = [
+    {index = "gsplat-py310-cu118"},
+]
+xformers = [
+    {index = "xformers-py310-cu118"}
+]
+pytorch3d = {git = "https://github.com/facebookresearch/pytorch3d", tag = "v0.7.9"}
+
+
+[tool.ruff]
+exclude = [
+    "__pycache__",
+    ".gradio",
+    "assets",
+    "config",
+    "datasets",
+    "examples",
+    "experiments",
+    "output"
+]
+
+target-version = "py310"
+
+# format config
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors.
+    "F",  # Pyflakes rules.
+    "I",  # isort formatting.
+    "PLC",  # Pylint convention warnings.
+    "PLE",  # Pylint errors.
+    "PLR",  # Pylint refactor recommendations.
+    "PLW",  # Pylint warnings.
+    "NPY201" # NumPY 2.0 migration https://numpy.org/devdocs/numpy_2_0_migration_guide.html#ruff-plugin
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[[tool.uv.index]]
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true
+
+[[tool.uv.index]]
+name = "torch-scatter-cu118"
+url = "https://data.pyg.org/whl/torch-2.2.0%2Bcu118.html"
+format = "flat"
+explicit = true
+
+[[tool.uv.index]]
+name = "gsplat-py310-cu118"
+url = "https://docs.gsplat.studio/whl/pt22cu118"
+explicit = true
+
+[[tool.uv.index]]
+name = "xformers-py310-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true
