@@ -30,8 +30,8 @@ model:
     voxelize: true
     intermediate_layer_idx: [4, 11, 17, 23]
     use_style: True # True - stylization enabled, False - no stylization
-    style_geom_features: "colors-rotations" # avaiable: "none", "no-pos","colors-rotations"
-    cond_type: "simple_injection_clip" # avaiable: "cross_attention_clip", "cross_attention_dino", "simple_injection_clip","agg_injection_clip"
+    style_geom_features: "colors-rotations" # available: "none", "no-pos","colors-rotations"
+    cond_type: "simple_injection_clip" # available & tested: "simple_injection_clip","agg_injection_clip"; recently NOT tested: "cross_attention_clip", "cross_attention_dino",
     text_adapter_return_identity: false
 
 
