@@ -1,3 +1,5 @@
+import gc
+import json
 import os
 import sys
 from math import floor
@@ -64,6 +66,17 @@ def find_latest_checkpoint(ckpt_dir: Path):
     return ckpts[-1]
 
 
+def _report_peak_vram(device: torch.device) -> None:
+    if device.type != "cuda":
+        return
+    torch.cuda.synchronize(device)
+    peak_alloc = torch.cuda.max_memory_allocated(device)
+    peak_reserved = torch.cuda.max_memory_reserved(device)
+    print(
+        f"\nPeak VRAM (PyTorch allocated): {peak_alloc / (1024**3):.2f} GiB\n"
+        f"Peak VRAM (caching allocator reserved): {peak_reserved / (1024**3):.2f} GiB"
+    )
+
 def main(config_path: str, sample: int | None):
     cfg_yaml = OmegaConf.load(config_path)
 
@@ -78,17 +91,33 @@ def main(config_path: str, sample: int | None):
         ckpt_path = find_latest_checkpoint(run_dir / "checkpoints")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if device.type == "cuda":
+        torch.cuda.reset_peak_memory_stats(device)
+    
+    # cfg.model.encoder.use_style=False #quick fix if you want to check without stylization. Not parametrized on purpose
     model = get_model(cfg.model.encoder, cfg.model.decoder)
     finetune_ckpt = torch.load(ckpt_path, map_location=device)
     state_dict = finetune_ckpt["state_dict"]
     clean_state_dict = {k.replace("model.", "", 1): v for k, v in state_dict.items()}
     model.load_state_dict(clean_state_dict, strict=False)
+
+    del finetune_ckpt, state_dict, clean_state_dict
+    gc.collect()
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+        torch.cuda.reset_peak_memory_stats(device)
+
     model = model.to(device=device).eval()
     for p in model.parameters():
         p.requires_grad = False
 
-    clip_model = load_clip_model()
-    convert_to_buffer(clip_model, persistent=False)
+    if cfg.model.encoder.use_style:
+        clip_model = load_clip_model()
+        convert_to_buffer(clip_model, persistent=False)
+    else:
+        clip_model = None
+
+    _report_peak_vram(device)
 
     global_texts = cfg_yaml.styles_for_all_scenes.get("text", [])
     global_imgs = cfg_yaml.styles_for_all_scenes.get("image", [])
@@ -126,9 +155,12 @@ def main(config_path: str, sample: int | None):
         # ---Text styles---
         for prompt in text_styles:
             print(f"→ Text style: {prompt}")
-            with torch.autocast(device_type="cuda", dtype=torch.float32):
-                style_dir = get_style_embedding(clip_model, style_prompt=prompt, adapter=model.encoder.text_adapter)
-            style_dir = (style_dir[0], None, None, style_dir[1])
+            if cfg.model.encoder.use_style:
+                with torch.autocast(device_type="cuda", dtype=torch.float32):
+                    style_dir = get_style_embedding(clip_model, style_prompt=prompt, adapter=model.encoder.text_adapter)
+                style_dir = (style_dir[0], None, None, style_dir[1])
+            else:
+                style_dir = None
             with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
                 gaussians, ctx = model.inference((imgs + 1) * 0.5, style_dir=style_dir)
 
@@ -166,21 +198,25 @@ def main(config_path: str, sample: int | None):
         for style_img in img_styles:
             print(f"→ Image style: {style_img}")
 
-            # Load style image and extract style embedding
-            style_img_raw = load_image(style_img).to(device=device)
-            style_img_dino = prepare_image_for_dino_patches(style_img_raw).unsqueeze(0)
+            if cfg.model.encoder.use_style:
+                # Load style image and extract style embedding
+                style_img_raw = load_image(style_img).to(device=device)
+                style_img_dino = prepare_image_for_dino_patches(style_img_raw).unsqueeze(0)
 
-            style_embed = None
-            if model.encoder.cond_type == "cross_attention_dino":
-                with torch.amp.autocast("cuda", enabled=True, dtype=torch.bfloat16):
-                    pkg = model.encoder.aggregator(images=style_img_dino, forward_mode="package_only")
-                style_embed = pkg[0][:, pkg[-1] :, :]
+                style_embed = None
+                if model.encoder.cond_type == "cross_attention_dino":
+                    with torch.amp.autocast("cuda", enabled=True, dtype=torch.bfloat16):
+                        pkg = model.encoder.aggregator(images=style_img_dino, forward_mode="package_only")
+                    style_embed = pkg[0][:, pkg[-1] :, :]
 
-            with torch.autocast(device_type="cuda", dtype=torch.float32):
-                style_dir = get_style_embedding(
-                    clip_model, style_image=style_img_raw, adapter=model.encoder.text_adapter
-                )
-            style_dir = (style_dir[0], style_embed, style_img_dino.shape, style_dir[1])
+            
+                with torch.autocast(device_type="cuda", dtype=torch.float32):
+                    style_dir = get_style_embedding(
+                        clip_model, style_image=style_img_raw, adapter=model.encoder.text_adapter
+                    )
+                style_dir = (style_dir[0], style_embed, style_img_dino.shape, style_dir[1])
+            else:
+                style_dir = None
 
             # Inference
             with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
@@ -219,6 +255,7 @@ def main(config_path: str, sample: int | None):
             )
 
     print("\nAll scenes complete.")
+    _report_peak_vram(device)
 
 
 if __name__ == "__main__":
